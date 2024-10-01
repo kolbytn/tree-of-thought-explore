@@ -19,11 +19,14 @@ if api_base != "":
 def completions_with_backoff(**kwargs):
     return openai.ChatCompletion.create(**kwargs)
 
-def gpt(prompt, model="gpt-4", temperature=0.7, max_tokens=1000, n=1, stop=None) -> list:
+def generate(prompt, model="gpt-4o", temperature=0.7, temp_decay=1, max_tokens=1000, n=1, stop=None) -> list:
     messages = [{"role": "user", "content": prompt}]
-    return chatgpt(messages, model=model, temperature=temperature, max_tokens=max_tokens, n=n, stop=stop)
-    
-def chatgpt(messages, model="gpt-4", temperature=0.7, max_tokens=1000, n=1, stop=None) -> list:
+    if "llama" in model:
+        return llama(messages, temperature=temperature, max_tokens=max_tokens, n=n, stop=stop)
+    else:
+        return chatgpt(messages, model=model, temperature=temperature, max_tokens=max_tokens, n=n, stop=stop)
+
+def chatgpt(messages, model="gpt-4o", temperature=0.7, max_tokens=1000, n=1, stop=None) -> list:
     global completion_tokens, prompt_tokens
     outputs = []
     while n > 0:
@@ -35,11 +38,54 @@ def chatgpt(messages, model="gpt-4", temperature=0.7, max_tokens=1000, n=1, stop
         completion_tokens += res["usage"]["completion_tokens"]
         prompt_tokens += res["usage"]["prompt_tokens"]
     return outputs
-    
-def gpt_usage(backend="gpt-4"):
+
+def gpt_usage(backend="gpt-4o"):
     global completion_tokens, prompt_tokens
-    if backend == "gpt-4":
+    if backend == "gpt-4o":
         cost = completion_tokens / 1000 * 0.06 + prompt_tokens / 1000 * 0.03
-    elif backend == "gpt-3.5-turbo":
-        cost = completion_tokens / 1000 * 0.002 + prompt_tokens / 1000 * 0.0015
     return {"completion_tokens": completion_tokens, "prompt_tokens": prompt_tokens, "cost": cost}
+
+
+LOCAL = None
+
+def llama(messages, temperature: float = 0.7, temp_decay: float = 1, max_tokens: int = 1000, n: int = 1, stop: str = None) -> list:
+    import torch
+    from transformers import pipeline, LogitsProcessorList
+    global LOCAL
+
+    if LOCAL is None:
+        LOCAL = pipeline(
+            "text-generation",
+            model="meta-llama/Llama-3.1-8B-Instruct",
+            device_map="auto",
+        )
+
+    class DecayingTemperatureLogitsWarper(LogitsProcessor):
+        def __init__(self, temperature: float, decay: float, reset_token_id: int = 128007):
+            self.temperature = temperature
+            self.decay = decay
+            self.reset_token_id = reset_token_id
+
+        def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
+            if self.reset_token_id is not None:
+                # get last index of reset token
+                reset_token_idx = torch.nonzero(input_ids == self.reset_token_id, as_tuple=False).max()
+                # decay temperature
+                temp = self.temperature * self.decay ** (input_ids.size(1) - reset_token_idx)
+            else:
+                temp = self.temperature * self.decay ** input_ids.size(1)
+
+            scores_processed = scores / temp
+            return scores_processed
+    LOCAL.model._get_logits_processor = lambda : LogitsProcessorList([
+        DecayingTemperatureLogitsWarper(temperature, temp_decay, None),
+    ])
+
+    outputs = LOCAL(
+        messages,
+        num_return_sequences=n,
+        max_new_tokens=max_tokens,
+        stop_strings=stop,
+    )
+    return [x["generated_text"][-1]["content"] for x in outputs]
+

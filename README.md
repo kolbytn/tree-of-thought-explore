@@ -1,27 +1,4 @@
-# Official Repo of Tree of Thoughts (ToT)
-
-<p>
-    <a href="https://badge.fury.io/py/tree-of-thoughts-llm">
-        <img src="https://badge.fury.io/py/tree-of-thoughts-llm.svg">
-    </a>
-    <a href="https://www.python.org/">
-        <img alt="Build" src="https://img.shields.io/badge/Python-3.7+-1f425f.svg?color=purple">
-    </a>
-    <a href="https://copyright.princeton.edu/policy">
-        <img alt="License" src="https://img.shields.io/badge/License-MIT-blue">
-    </a>
-    <a href="https://zenodo.org/badge/latestdoi/642099326">
-        <img src="https://zenodo.org/badge/642099326.svg">
-    </a>
-</p>
-
-![teaser](pics/teaser.png)
-
-Official implementation for paper [Tree of Thoughts: Deliberate Problem Solving with Large Language Models](https://arxiv.org/abs/2305.10601) with code, prompts, model outputs.
-Also check [its tweet thread](https://twitter.com/ShunyuYao12/status/1659357547474681857) in 1min.
-
-
-
+# Tree of Thoughts (ToT) + Exploration!
 
 
 ## Setup
@@ -77,8 +54,6 @@ The very simple ``run.py`` implements the ToT + BFS algorithm, as well as the na
 - ``--n_evaluate_sample``: number of times to prompt for state evaluation
 - ``--n_select_sample``: number of states to keep from each step (i.e. ``b`` in the paper's ToT + BFS algorithm)
 
-
-
 ## Paper Trajectories
 ``logs/`` contains all the trajectories from the paper's experiments, except for ``logs/game24/gpt-4_0.7_propose1_value3_greedy5_start900_end1000.json`` which was reproduced after the paper (as the original experiment was done in a notebook) and achieved a 69\% score instead of the original 74\% score due to randomness in GPT decoding. We hope to aggregate multiple runs in the future to account for sampling randomness and update the paper, but this shouldn't affect the main conclusions of the paper.
 
@@ -86,17 +61,3 @@ The very simple ``run.py`` implements the ToT + BFS algorithm, as well as the na
 Setting up a new task is easy, and mainly involves two steps.
 * Set up a new task class in ``tot/tasks/`` and task files in ``tot/data/``. See ``tot/tasks/game24.py`` for an example. Add the task to ``tot/tasks/__init__.py``.
 * Set up task-specific prompts in ``tot/prompts/``. See ``tot/prompts/game24.py`` for an example. Depending on the nature of the task, choose ``--method_generate`` (choices=[``sample``, ``propose``]) and ``--method_evaluate`` (choices=[``value``, ``vote``]) and their corresponding prompts. 
-
-## Citations
-Please cite the paper and star this repo if you use ToT and find it interesting/useful, thanks! Feel free to contact shunyuyao.cs@gmail.com or open an issue if you have any questions.
-
-```bibtex
-@misc{yao2023tree,
-      title={{Tree of Thoughts}: Deliberate Problem Solving with Large Language Models}, 
-      author={Shunyu Yao and Dian Yu and Jeffrey Zhao and Izhak Shafran and Thomas L. Griffiths and Yuan Cao and Karthik Narasimhan},
-      year={2023},
-      eprint={2305.10601},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL}
-}
-```
