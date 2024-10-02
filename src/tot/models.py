@@ -50,7 +50,7 @@ LOCAL = None
 
 def llama(messages, temperature: float = 0.7, temp_decay: float = 1, max_tokens: int = 1000, n: int = 1, stop: str = None) -> list:
     import torch
-    from transformers import pipeline, LogitsProcessorList
+    from transformers import pipeline, LogitsProcessorList, LogitsProcessor
     global LOCAL
 
     if LOCAL is None:
@@ -77,7 +77,7 @@ def llama(messages, temperature: float = 0.7, temp_decay: float = 1, max_tokens:
 
             scores_processed = scores / temp
             return scores_processed
-    LOCAL.model._get_logits_processor = lambda : LogitsProcessorList([
+    LOCAL.model._get_logits_processor = lambda *arg, **kwargs : LogitsProcessorList([
         DecayingTemperatureLogitsWarper(temperature, temp_decay, None),
     ])
 

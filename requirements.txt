@@ -17,3 +17,6 @@ tqdm==4.65.0
 urllib3==2.0.2
 yarl==1.9.2
 pandas==2.0.3
+torch==2.4.1
+transformers==4.40.2
+accelerate==0.34.2

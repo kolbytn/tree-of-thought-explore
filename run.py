@@ -10,9 +10,9 @@ def run(args):
     task = get_task(args.task)
     logs, cnt_avg, cnt_any = [], 0, 0
     if args.naive_run:
-        file = f'./logs/{args.task}/{args.backend}_{args.temperature}_naive_{args.prompt_sample}_sample_{args.n_generate_sample}_start{args.task_start_index}_end{args.task_end_index}.json'
+        file = f'./logs/{args.task}/{args.backend}_{args.temperature}_{args.temp_decay}_naive_{args.prompt_sample}_sample_{args.n_generate_sample}_start{args.task_start_index}_end{args.task_end_index}.json'
     else:
-        file = f'./logs/{args.task}/{args.backend}_{args.temperature}_{args.method_generate}{args.n_generate_sample}_{args.method_evaluate}{args.n_evaluate_sample}_{args.method_select}{args.n_select_sample}_start{args.task_start_index}_end{args.task_end_index}.json'
+        file = f'./logs/{args.task}/{args.backend}_{args.temperature}_{args.temp_decay}_{args.method_generate}{args.n_generate_sample}_{args.method_evaluate}{args.n_evaluate_sample}_{args.method_select}{args.n_select_sample}_start{args.task_start_index}_end{args.task_end_index}.json'
     os.makedirs(os.path.dirname(file), exist_ok=True)
 
     for i in range(args.task_start_index, args.task_end_index):
